@@ -1,17 +1,14 @@
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class MemberList {
-    private ArrayList<Member> members;
+    private List<Member> members;
 
     private Scanner scanner = new Scanner(System.in);
 
     public MemberList() {
         members = new ArrayList<Member>();
-    }
-
-    public ArrayList<Member> getMembers() {
-        return members;
     }
 
     public void addMember() {

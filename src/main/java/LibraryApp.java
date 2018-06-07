@@ -3,8 +3,8 @@ import java.util.Scanner;
 public class LibraryApp {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        Library library = new Library();
         MemberList memberList = new MemberList();
+        Library library = new Library(memberList);
 
         int choice;
         do {

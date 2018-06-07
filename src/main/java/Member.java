@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,12 +7,12 @@ public class Member {
     private final UUID ID;
     private String name;
 
-    private List<Book> membersBook;
+    private List<Book> memberBooks;
 
     public Member(String name) {
         this.ID = UUID.randomUUID();
         this.name = name;
-        this.membersBook = new ArrayList<Book>();
+        this.memberBooks = new ArrayList<Book>();
     }
 
     public String getName() {
@@ -29,8 +28,8 @@ public class Member {
     }
 
 
-    public List<Book> getMembersBook() {
-        return membersBook;
+    public List<Book> getMemberBooks() {
+        return memberBooks;
     }
 
 
