@@ -3,12 +3,12 @@ import java.util.List;
 import java.util.Scanner;
 
 public class MemberList {
-    private List<Member> members;
+    private LibraryDao libraryDao;
 
     private Scanner scanner = new Scanner(System.in);
 
-    public MemberList() {
-        members = new ArrayList<Member>();
+    public MemberList(LibraryDao libraryDao) {
+        this.libraryDao = libraryDao;
     }
 
     public void addMember() {
@@ -18,14 +18,13 @@ public class MemberList {
             newMemberName = scanner.nextLine();
         } while (!isValidName(newMemberName));
 
-        for (Member member : members) {
-            if (member.getName().equals(newMemberName)) {
-                System.out.println("Taka osoba juz istnieje.");
-                return;
-            }
+        List<Member> member1 = libraryDao.findMember(newMemberName);
+        if(!member1.isEmpty()){
+            System.out.println("Member with this name already exist.");
+            return;
         }
         Member newMember = new Member(newMemberName);
-        members.add(newMember);
+        libraryDao.addMember(newMember);
         System.out.println("Dodano " + newMember.getName() + " do rejestru.");
     }
 
@@ -40,24 +39,22 @@ public class MemberList {
         return true;
     }
 
-    public void showMembers() {
-        if (members.size() > 0) {
-            for (Member member : members) {
-                System.out.println("Pani/Pan " + member.getName() + " numer ID " + member.getID());
-            }
-        }
-    }
+//    public void showMembers() {
+//        if (members.size() > 0) {
+//            for (Member member : members) {
+//                System.out.println("Pani/Pan " + member.getName() + " numer ID " + member.getID());
+//            }
+//        }
+//    }
 
     public Member findMember() {
         System.out.println("Podaj swoje imie i nazwisko: ");
         String member = scanner.nextLine();
-        int size = members.size();
-        for (Member member1 : members) {
-            if (member1.getName().equals(member)) {
-                return member1;
-            }
+        List<Member> member2 = libraryDao.findMember(member);
+        if(member2.isEmpty()){
+            return null;
         }
-        return null;
+        return member2.get(0);
     }
 }
 

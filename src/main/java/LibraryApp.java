@@ -1,40 +1,55 @@
 import org.h2.tools.Server;
 
+import java.util.HashMap;
 import java.util.Scanner;
+import java.util.concurrent.Callable;
 
 public class LibraryApp {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        MemberList memberList = new MemberList();
-        Library library = new Library(memberList);
+
+    public interface LibAction {
+        void perform(Library library, MemberList members);
+    }
+
+    enum Actions {
+        EXIT("Exit", (library, members) -> {
+        }),
+        REGISTER("Register", (library, members) -> members.addMember()),
+        BORROW_BOOK("Borrow book", (library, members) -> library.boorowBook()),
+        RETURN_BOOK("Return book", (library, members) -> library.returnBook()),
+        ADD_BOOK("Add book", (library, members) -> library.addBook()),
+        REMOVE_BOOK("Remove book", (library, members) -> library.removeBook()),
+        SHOW_BOOK("Show books", (library, members) -> library.showBooks()),
+        SHOW_MEMBERS("Remove book", (library, members) -> library.showMembers()),
+        FIND_BOOK("Find book", (library, members) -> library.findBook());
 
 
-        int choice;
-        do {
-            System.out.println("Witamy w naszej bibliotece! \n Co chcialbys zrobic: \n1.Rejestracja. \n2." +
-                    "Wypozyczyc ksiazke. \n3.Dodac ksiazke do biblioteki. \n4.Usunac ksiazke. \n5.Zobaczyc spis ksiazek.\n6.Spis uzytkowanikow.");
-            choice = scanner.nextInt();
-            switch (choice) {
-                case 1:
-                    memberList.addMember();
-                    break;
+        private final String text;
+        private final LibAction actionToPerform;
 
-                case 2:
-                    library.boorowBook();
-                    break;
-                case 3:
-                    library.addBook();
-                    break;
-                case 4:
-                    library.removeBook();
-                    break;
-                case 5:
-                    library.showBooks();
-                    break;
-                case 6:
-                    memberList.showMembers();
-            }
+        Actions(String text, LibAction actionToPerform) {
+            this.text = text;
+            this.actionToPerform = actionToPerform;
         }
-        while(choice<=6);
+    }
+
+
+    public static void main(String[] args) {
+        LibraryDao libraryDao = new LibraryDao();
+        libraryDao.initialize();
+        Scanner scanner = new Scanner(System.in);
+        MemberList memberList = new MemberList(libraryDao);
+        Library library = new Library(memberList, libraryDao);
+
+        Actions lastAction = null;
+        do {
+            Actions[] actions = Actions.values();
+            for (int i = 0; i < actions.length; i++) {
+                System.out.println(i + " - " + actions[i].text);
+            }
+            int choice;
+            choice = Integer.parseInt(scanner.nextLine());
+            lastAction = actions[choice];
+            lastAction.actionToPerform.perform(library, memberList);
+        } while (lastAction != Actions.EXIT);
     }
 }

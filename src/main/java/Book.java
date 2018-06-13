@@ -9,13 +9,17 @@ public class Book {
     private String descritpion;
     private boolean isAvaible;
 
-    public Book(String author, String title, int releseYear, String descritpion) {
-        this.ID = UUID.randomUUID();
+    public Book(UUID uuid, String author, String title, int releseYear, String descritpion) {
+        this.ID = uuid;
         this.author = author;
         this.title = title;
         this.releseYear = releseYear;
         this.descritpion = descritpion;
         this.isAvaible = true;
+    }
+
+    public Book(String author, String title, int releseYear, String descritpion) {
+        this(UUID.randomUUID(), author, title, releseYear, descritpion);
     }
 
     public void setAuthor(String author) {

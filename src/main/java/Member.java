@@ -5,14 +5,18 @@ import java.util.UUID;
 public class Member {
 
     private final UUID ID;
-    private String name;
 
-    private List<Book> memberBooks;
+    private String name;
 
     public Member(String name) {
         this.ID = UUID.randomUUID();
         this.name = name;
-        this.memberBooks = new ArrayList<Book>();
+
+    }
+
+    public Member(UUID ID, String name) {
+        this.ID = ID;
+        this.name = name;
     }
 
     public String getName() {
@@ -28,8 +32,13 @@ public class Member {
     }
 
 
-    public List<Book> getMemberBooks() {
-        return memberBooks;
+
+    @Override
+    public String toString() {
+        return "Member{" +
+                "ID=" + ID +
+                ", name='" + name + '\'' +
+                '}';
     }
 
 
