@@ -1,3 +1,5 @@
+package pl.library;
+
 import javax.xml.crypto.Data;
 import java.util.UUID;
 
@@ -69,7 +71,7 @@ public class Book {
 
     @Override
     public String toString() {
-        return "Book{" +
+        return "pl.library.Book{" +
                 "ID='" + ID + '\'' +
                 ", author='" + author + '\'' +
                 ", title='" + title + '\'' +

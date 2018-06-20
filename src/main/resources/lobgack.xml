@@ -2,13 +2,13 @@
 
 <configuration>
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender login="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <logger name="com.lordofthejars.foo" level="INFO" />
+    <logger login="com.lordofthejars.foo" level="INFO" />
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />

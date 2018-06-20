@@ -1,5 +1,12 @@
+package pl.library.db;
+
 import org.h2.tools.Server;
 import org.slf4j.LoggerFactory;
+import pl.library.Book;
+import pl.library.Member;
+import pl.library.db.mappers.BookMapper;
+import pl.library.db.mappers.MemberMapper;
+import pl.library.db.mappers.ResultSetMapper;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -9,7 +16,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
@@ -39,10 +45,10 @@ public class LibraryDao {
             System.out.println(tcpServer.getStatus());
             System.out.println(webServer.getStatus());
             con = DriverManager.getConnection(url, "sa", "");
-            InputStream sqlFile = LibraryDao.class.getResourceAsStream("skrypt.sql");
+            InputStream sqlFile = LibraryDao.class.getResourceAsStream("/skrypt.sql");
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(sqlFile));
             StringBuilder stringBuilder = new StringBuilder();
-            String line = null;
+            String line;
             while ((line = bufferedReader.readLine()) != null) {
                 stringBuilder.append(line).append("\n");
             }
@@ -91,7 +97,11 @@ public class LibraryDao {
     public void addMember(Member member) {
         try {
             Statement statement = con.createStatement();
-            statement.executeUpdate(String.format("insert into MEMBERS values ('%s', '%s')", member.getID(), member.getName()));
+            statement.executeUpdate(String.format("insert into MEMBERS values ('%s', '%s', '%s', '%s')",
+                    member.getID(),
+                    member.getPassword(),
+                    member.getLogin(),
+                    member.getRole()));
             statement.close();
         } catch (SQLException e) {
             log.error("Failed to add a member", e);
@@ -100,27 +110,8 @@ public class LibraryDao {
     }
 
     public List<Book> findBook(String searchedAuthor, String searchedTitle) {
-        List<Book> books = new ArrayList<>();
-        try {
-            Statement statement = con.createStatement();
-            ResultSet resultSet = statement.executeQuery(String.format("SELECT * FROM BOOKS WHERE TITLE LIKE '%%%s%%' OR AUTHOR LIKE '%%%s%%'",
-                    searchedTitle, searchedAuthor));
-            while (resultSet.next()) {
-                UUID uuid = UUID.fromString(resultSet.getString(1));
-                String author = resultSet.getString((2));
-                String title = resultSet.getString((3));
-                int releaseYear = resultSet.getInt((4));
-                String description = resultSet.getString((5));
-                Book book = new Book(uuid, author, title, releaseYear, description);
-                books.add(book);
-
-            }
-
-        } catch (SQLException e) {
-            log.error("Failed to find member", e);
-        }
-        String dupa = "to jest \"cyatat\"";
-        return books;
+        return executeQuery(String.format("SELECT * FROM BOOKS WHERE TITLE LIKE '%%%s%%' OR AUTHOR LIKE '%%%s%%'",
+                searchedTitle, searchedAuthor), new BookMapper());
     }
 
     public void removeBook(String searchPhrase) {
@@ -142,8 +133,8 @@ public class LibraryDao {
                 System.out.println("This book doesnt exist.");
                 return;
             }
-            statment.executeUpdate(String.format("DELETE FROM BOOKS WHERE BOOKID = '%s'", book.getID()));
-            System.out.println("Book has been removed");
+            statment.executeUpdate(String.format("DELETE FROM BOOKS WHERE ID = '%s'", book.getID()));
+            System.out.println("pl.library.Book has been removed");
 
 
         } catch (SQLException e) {
@@ -152,43 +143,23 @@ public class LibraryDao {
     }
 
     public List<Book> showBooks() {
-        List<Book> books = new ArrayList<>();
-        try {
-            Statement statement = con.createStatement();
-            ResultSet resultSet = statement.executeQuery(String.format("SELECT * FROM BOOKS"));
-            while (resultSet.next()) {
-                UUID uuid = UUID.fromString(resultSet.getString(1));
-                String author = resultSet.getString((2));
-                String title = resultSet.getString((3));
-                int releaseYear = resultSet.getInt((4));
-                String description = resultSet.getString((5));
-                Book book = new Book(uuid, author, title, releaseYear, description);
-                books.add(book);
-
-            }
-
-        } catch (SQLException e) {
-            log.error("Failed to show books", e);
-        }
-        return books;
+        return executeQuery(String.format("SELECT * FROM BOOKS"), new BookMapper());
     }
 
     public List<Member> findMember(String searchPharse) {
-        List<Member> members = new ArrayList<>();
-        try {
-            Statement statement = con.createStatement();
-            ResultSet resultSet = statement.executeQuery(String.format("SELECT * FROM MEMBERS WHERE NAME LIKE '%s'", searchPharse));
+        return executeQuery(String.format("SELECT * FROM MEMBERS WHERE NAME LIKE '%s'", searchPharse), new MemberMapper());
+    }
 
-            while (resultSet.next()) {
-                String ID = resultSet.getString(1);
-                String name = resultSet.getString(2);
-                Member member = new Member(UUID.fromString(ID), name);
-                members.add(member);
-            }
-        } catch (SQLException e) {
-            log.error("Failed to find member", e);
+    public Member findMember(String login, String password) {
+        List<Member> members = executeQuery(String.format("SELECT * FROM MEMBERS WHERE NAME ='%s' AND PASSWORD ='%s'", login, password), new MemberMapper());
+        if(members.size() > 1) {
+            throw new IllegalStateException("Found more that 1 member for login = " + login + " and password = " + password);
         }
-        return members;
+        if(members.isEmpty()) {
+            return null;
+        }
+        return members.get(0);
+
     }
 
     public void borrowBook(UUID memberID, UUID bookID) {
@@ -202,42 +173,13 @@ public class LibraryDao {
 
 
     public List<Book> getMemberBooks(UUID memberID) {
-        List<Book> memberBooks = new ArrayList<>();
-        try {
-            Statement statement = con.createStatement();
-            ResultSet resultSet = statement.executeQuery(String.format("SELECT  BORROWED_BOOKS.*, BOOKS.*   FROM BORROWED_BOOKS\n" +
-                    "INNER JOIN BOOKS ON BORROWED_BOOKS.BOOKID=BOOKS.BOOKID\n" +
-                    "where BORROWED_BOOKS.MEMBERID = '%s'", memberID));
-            while (resultSet.next()) {
-                String id = resultSet.getString(3);
-                String author = resultSet.getString(4);
-                String title = resultSet.getString(5);
-                int releaseYear = resultSet.getInt(6);
-                String description = resultSet.getString(7);
-                Book book = new Book(UUID.fromString(id), author, title, releaseYear, description);
-                memberBooks.add(book);
-            }
-        } catch (SQLException e) {
-            log.error("Failed to find ushers book", e);
-        }
-        return memberBooks;
+        return executeQuery(String.format("SELECT  BORROWED_BOOKS.*, BOOKS.*   FROM BORROWED_BOOKS\n" +
+                "INNER JOIN BOOKS ON BORROWED_BOOKS.BOOKID=BOOKS.ID\n" +
+                "where BORROWED_BOOKS.MEMBERID = '%s'", memberID), new BookMapper());
     }
 
     public List<Member> showMembers() {
-        List<Member> members = new ArrayList<>();
-        try {
-            Statement statement = con.createStatement();
-            ResultSet resultSet = statement.executeQuery(String.format("SELECT * FROM MEMBERS"));
-            while (resultSet.next()) {
-                UUID id = UUID.fromString(resultSet.getString(1));
-                String name = resultSet.getString(2);
-                Member member = new Member(id, name);
-                members.add(member);
-            }
-        } catch (SQLException e) {
-            log.error("Failed to show members", e);
-        }
-        return members;
+        return executeQuery(String.format("SELECT * FROM MEMBERS"), new MemberMapper());
     }
 
     public boolean isAvaible(UUID bookID) {
@@ -252,12 +194,22 @@ public class LibraryDao {
         return execute;
 
     }
-    public void returnBook(String bookID){
+
+    public void returnBook(String bookID) {
         try {
             Statement statement = con.createStatement();
             statement.executeUpdate(String.format("DELETE FROM BORROWED_BOOKS WHERE BOOKID = '%s' ", bookID));
         } catch (SQLException e) {
             log.error("Failed to return book", e);
+        }
+    }
+
+    private <T> List<T> executeQuery(String query, ResultSetMapper<T> mapper) {
+        try (Statement statement = con.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(query);
+            return mapper.map(resultSet);
+        } catch (SQLException e) {
+            throw new IllegalStateException("Query " + query + "execution failed", e);
         }
     }
 }

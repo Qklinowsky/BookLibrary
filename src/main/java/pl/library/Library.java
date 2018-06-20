@@ -1,5 +1,7 @@
-import java.util.ArrayList;
-import java.util.Iterator;
+package pl.library;
+
+import pl.library.db.LibraryDao;
+
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
@@ -36,7 +38,7 @@ public class Library {
         String description = scanner.nextLine();
         Book book2 = new Book(author, title, releseYear, description);
         libDao.addBook(book2);
-        System.out.println("Book has been added");
+        System.out.println("pl.library.Book has been added");
 
     }
 
@@ -73,18 +75,18 @@ public class Library {
         if (member != null) {
             List<Book> memberBooks = libDao.getMemberBooks(member.getID());
             if (memberBooks.size() < 5) {
-                if (libDao.isAvaible(book.getID())) {//TODO isavaible libdao
+                if (libDao.isAvaible(book.getID())) {
                     libDao.borrowBook(member.getID(), book.getID());
                     memberBooks.add(book);
-                    System.out.println("Member " + member.getName() + " borrowed " + book.toString() + " .");
+                    System.out.println("pl.library.Member " + member.getLogin() + " borrowed " + book.toString() + " .");
                 } else {
-                    System.out.println("Book is unanavailbe");
+                    System.out.println("pl.library.Book is unanavailbe");
                 }
             } else {
                 System.out.println("Reached limit of books.");
             }
         } else {
-            System.out.println("Member with this name doesn't exist, try to register.");
+            System.out.println("pl.library.Member with this name doesn't exist, try to register.");
         }
     }
 
@@ -118,20 +120,14 @@ public class Library {
         return member2;
     }
 
-    public void showMembers() {
-        List<Member> members = libDao.showMembers();
-        for (Member member : members) {
-            System.out.println(member.toString());
-        }
-    }
 
     public boolean isAvaible() {
         UUID id = findBook().getID();
         boolean avaible = libDao.isAvaible(id);
         if(avaible == true){
-            System.out.println("Book is avaible");
+            System.out.println("pl.library.Book is avaible");
         }else{
-            System.out.println("Book is unaviable");
+            System.out.println("pl.library.Book is unaviable");
         }
         return avaible;
     }
@@ -145,7 +141,7 @@ public class Library {
         int nextInt = Integer.parseInt(scanner.nextLine());
         Book book = memberBooks.get(nextInt);
         libDao.returnBook(book.getID().toString());
-        System.out.println("Book has been returned");
+        System.out.println("pl.library.Book has been returned");
     }
 
 
